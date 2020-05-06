@@ -1,8 +1,9 @@
 // rust-hwid
 // (c) 2020 tilda, under MIT license
 extern crate winreg;
+use winreg::enums::HKEY_LOCAL_MACHINE;
 
-#[cfg(target_os = "win32")]
+#[cfg(target_os = "windows")]
 pub fn get_id() -> std::string::String {
     // escaping is fun, right? right???
     let hive = winreg::RegKey::predef(HKEY_LOCAL_MACHINE).open_subkey("\\\\SOFTWARE\\Microsoft\\Cryptography").expect("Failed to open subkey");

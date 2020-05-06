@@ -15,4 +15,4 @@ path = "src/lib.rs"
 
 [[bin]]
 name = "hwid-example"
-path = "examples/get_id.rs"
+path = "examples/get_hwid.rs"
