@@ -41,5 +41,5 @@ pub fn get_id() -> std::string::String {
 #[cfg(target_os = "openbsd")]
 #[cfg(target_os = "netbsd")]
 pub fn get_id() -> std::string::String {
-    panic!("*BSD support is not implemented")
+    unimplemented!("*BSD support is not implemented")
 }
