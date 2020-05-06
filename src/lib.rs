@@ -1,12 +1,6 @@
 // rust-hwid
 // (c) 2020 tilda, under MIT license
-
-use std::env;
-use std::process::Command;
-use std::fs;
-use std::path::Path;
-use winreg::enums::*;
-use winreg::RegKey;
+extern crate winreg;
 
 #[cfg(target_os = "win32")]
 pub fn get_id() -> std::string::String {

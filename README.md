@@ -1,13 +1,16 @@
 # rust-hwid
 
-An simple library to detect an OS equivalent of an Hardware ID
+A simple library to detect an OS equivalent of an Hardware ID
 
 # Currently supported
 - Windows
 - macOS
 - Linux (dbus, systemd HWIDs)
 
-# Usage
-TODO: The library doesn't even allow you to use it yet.
+# TODO
+Find a way to support *BSDs or ditch the function for them entirely
 
-I'll program in some OS detection logic/etc in due time.
+# Usage
+There is a single function: `get_id()`
+
+An example is provided in the `examples` folder.
