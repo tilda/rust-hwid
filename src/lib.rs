@@ -34,7 +34,7 @@ mod hwid {
     pub fn get_id() -> Result<std::string::String, HwIdError> {
         // escaping is fun, right? right???
         let hive = winreg::RegKey::predef(HKEY_LOCAL_MACHINE)
-            .open_subkey(r"\\SOFTWARE\Microsoft\Cryptography")
+            .open_subkey(r"\\Software\Microsoft\Cryptography")
             .or(Err(HwIdError::NotFound))?;
         let id = hive.get_value("MachineGuid").or(Err(HwIdError::NotFound))?;
         Ok(id)
