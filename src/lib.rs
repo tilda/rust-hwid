@@ -36,9 +36,7 @@ mod hwid {
         let hive = winreg::RegKey::predef(HKEY_LOCAL_MACHINE)
             .open_subkey(r"\\SOFTWARE\Microsoft\Cryptography")
             .or(Err(HwIdError::NotFound))?;
-        let id = hive
-            .get_value("MachineGuid")
-            .or(Err(HwIdError::NotFound))?;
+        let id = hive.get_value("MachineGuid").or(Err(HwIdError::NotFound))?;
         Ok(id)
     }
 }
@@ -75,10 +73,7 @@ mod hwid {
     /// obtained from `/var/lib/dbus/machine-id`, or failing
     /// that from `/etc/machine-id`.
     pub fn get_id() -> Result<std::string::String, HwIdError> {
-        let paths = [
-            "/var/lib/dbus/machine-id",
-            "/etc/machine-id",
-        ];
+        let paths = ["/var/lib/dbus/machine-id", "/etc/machine-id"];
         for p in paths {
             if let Ok(id_contents) = std::fs::read_to_string(p) {
                 let id_str = id_contents
