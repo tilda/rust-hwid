@@ -1,40 +1,100 @@
 // rust-hwid
 // (c) 2020 tilda, under MIT license
-extern crate winreg;
-use winreg::enums::HKEY_LOCAL_MACHINE;
+
+//! Get a "Hardware ID" for the host machine. This is a UUID
+//! which is intended to uniquely represent this entity.
+
+use thiserror::Error;
+
+/// Possible failure cases for [get_id()].
+#[derive(Debug, Error)]
+pub enum HwIdError {
+    /// Could not detect a hardware id. This might be caused
+    /// by a misconfigured system or by this feature not
+    /// being supported by the system or platform.
+    #[error("no HWID was found on system")]
+    NotFound,
+    /// Found a putative HWID, but something was wrong with
+    /// it.  The `String` argument contains a path or other
+    /// identifier at which the HWID was found. This will
+    /// usually indicate something is really wrong with the
+    /// system.
+    #[error("{0:?}: contains malformed HWID")]
+    Malformed(String),
+}
 
 #[cfg(target_os = "windows")]
-pub fn get_id() -> std::string::String {
-    // escaping is fun, right? right???
-    let hive = winreg::RegKey::predef(HKEY_LOCAL_MACHINE).open_subkey("\\\\SOFTWARE\\Microsoft\\Cryptography").expect("Failed to open subkey");
-    let id = hive.get_value("MachineGuid").expect("Failed to get MachineGuid");
-    return id
+mod hwid {
+    use super::*;
+    use winreg::enums::HKEY_LOCAL_MACHINE;
+
+    /// Get the hardware ID of this machine. The HWID is
+    /// obtained from the Windows registry at location
+    /// `\\\\SOFTWARE\\Microsoft\\Cryptography\\MachineGuid`.
+    pub fn get_id() -> Result<std::string::String, HwIdError> {
+        // escaping is fun, right? right???
+        let hive = winreg::RegKey::predef(HKEY_LOCAL_MACHINE)
+            .open_subkey(r"\\Software\Microsoft\Cryptography")
+            .or(Err(HwIdError::NotFound))?;
+        let id = hive.get_value("MachineGuid").or(Err(HwIdError::NotFound))?;
+        Ok(id)
+    }
 }
 
 #[cfg(target_os = "darwin")]
-pub fn get_id() -> std::string::String {
-    let cmd = std::process::Command::new("ioreg").arg("-rd1").arg("-c").arg("IOExpertPlatformDevice").output().expect("Failed to get HWID");
-    let id = cmd.stdout.last();
-    return id
+mod hwid {
+    use super::*;
+
+    /// Get the hardware ID of this machine. The HWID is
+    /// obtained by running
+    ///
+    /// ```text
+    /// ioreg -rd1 -c IOExpertPlatformDevice
+    /// ```
+    ///
+    /// and returning the result.
+    pub fn get_id() -> Result<std::string::String, HwIdError> {
+        let cmd = std::process::Command::new("ioreg")
+            .arg("-rd1")
+            .arg("-c")
+            .arg("IOExpertPlatformDevice")
+            .output()
+            .or(Err(HwIdError::NotFound))?;
+        let id = cmd.stdout.last();
+        Ok(id)
+    }
 }
 
 #[cfg(target_os = "linux")]
-pub fn get_id() -> std::string::String {
-    let mut id = Path::new("/var/lib/dbus/machine-id").exists();
-    if id == false {
-        id = Path::new("/etc/machine-id").exists();
-        if id == false {
-            panic!("No HWID was found on system");
+mod hwid {
+    use super::*;
+
+    /// Get the hardware ID of this machine. The HWID is
+    /// obtained from `/var/lib/dbus/machine-id`, or failing
+    /// that from `/etc/machine-id`.
+    pub fn get_id() -> Result<std::string::String, HwIdError> {
+        let paths = ["/var/lib/dbus/machine-id", "/etc/machine-id"];
+        for p in paths {
+            if let Ok(id_contents) = std::fs::read_to_string(p) {
+                let id_str = id_contents
+                    .lines()
+                    .next()
+                    .ok_or_else(|| HwIdError::Malformed(id_contents.to_string()))?;
+                return Ok(id_str.to_string());
+            }
         }
-        return id
+        Err(HwIdError::NotFound)
     }
-    return id
 }
 
 #[cfg(target_os = "freebsd")]
 #[cfg(target_os = "dragonfly")]
 #[cfg(target_os = "openbsd")]
 #[cfg(target_os = "netbsd")]
-pub fn get_id() -> std::string::String {
-    unimplemented!("*BSD support is not implemented")
+mod hwid {
+    pub fn get_id() -> std::string::String {
+        unimplemented!("*BSD support is not implemented")
+    }
 }
+
+pub use hwid::get_id;
