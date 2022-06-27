@@ -41,7 +41,7 @@ mod hwid {
     }
 }
 
-#[cfg(target_os = "darwin")]
+#[cfg(target_os = "macos")]
 mod hwid {
     use super::*;
 
