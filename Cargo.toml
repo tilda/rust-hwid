@@ -11,3 +11,7 @@ winreg = "0.6"
 
 [dependencies]
 thiserror = "1.0.31"
+
+[[example]]
+name = "get_hwid"
+crate-type = ["bin"]
