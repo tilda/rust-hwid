@@ -41,7 +41,7 @@ mod hwid {
     }
 }
 
-#[cfg(target_os = "darwin")]
+#[cfg(target_os = "macos")]
 mod hwid {
     use super::*;
 
@@ -57,11 +57,30 @@ mod hwid {
         let cmd = std::process::Command::new("ioreg")
             .arg("-rd1")
             .arg("-c")
-            .arg("IOExpertPlatformDevice")
+            .arg("IOPlatformExpertDevice")
             .output()
-            .or(Err(HwIdError::NotFound))?;
-        let id = cmd.stdout.last();
-        Ok(id)
+            .or(Err(HwIdError::NotFound))?
+            .stdout;
+        let out = String::from_utf8(cmd).or(Err(HwIdError::Malformed(String::from("ioreg"))))?;
+        match out
+            .lines()
+            .find(|l| l.contains("IOPlatformUUID"))
+            .unwrap_or("")
+            .split('=')
+            .nth(1)
+            .unwrap_or("")
+            .split('\"')
+            .nth(1)
+        {
+            None => Err(HwIdError::NotFound),
+            Some(id) => {
+                if id.is_empty() {
+                    Err(HwIdError::Malformed(String::from("ioreg")))
+                } else {
+                    Ok(id.to_string())
+                }
+            }
+        }
     }
 }
 
