@@ -26,7 +26,7 @@ pub enum HwIdError {
 #[cfg(target_os = "windows")]
 mod hwid {
     use super::*;
-    use winreg::enums::HKEY_LOCAL_MACHINE;
+    use winreg::enums::{HKEY_LOCAL_MACHINE, KEY_QUERY_VALUE};
 
     /// Get the hardware ID of this machine. The HWID is
     /// obtained from the Windows registry at location
@@ -34,7 +34,7 @@ mod hwid {
     pub fn get_id() -> Result<std::string::String, HwIdError> {
         // escaping is fun, right? right???
         let hive = winreg::RegKey::predef(HKEY_LOCAL_MACHINE)
-            .open_subkey(r"\\Software\Microsoft\Cryptography")
+            .open_subkey_with_flags("Software\\Microsoft\\Cryptography", KEY_QUERY_VALUE)
             .or(Err(HwIdError::NotFound))?;
         let id = hive.get_value("MachineGuid").or(Err(HwIdError::NotFound))?;
         Ok(id)
