@@ -1,6 +1,6 @@
-extern crate hwid;
+extern crate hardware_id;
 
-use hwid::get_id;
+use hardware_id::get_id;
 
 fn main() {
     let hwid = get_id().unwrap();
